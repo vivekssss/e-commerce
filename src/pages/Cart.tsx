@@ -71,7 +71,12 @@ class Cart extends React.Component<RouterProps, CartState> {
           <h2 className="text-2xl font-black text-gray-900">Your Shopping Cart</h2>
           {cart.items.length > 0 && (
             <button 
-              onClick={() => this.setState({ showClearConfirm: true })}
+              onClick={() => {
+                this.setState({ showClearConfirm: true });
+                setTimeout(() => {
+                  document.getElementById('clear-cart-modal')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 10);
+              }}
               className="text-sm text-rose-500 font-bold hover:text-rose-600 transition-colors flex items-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -278,7 +283,7 @@ class Cart extends React.Component<RouterProps, CartState> {
 
         <AnimatePresence>
           {this.state.showClearConfirm && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div id="clear-cart-modal" className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
