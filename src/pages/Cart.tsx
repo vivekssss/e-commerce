@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { cleanImageUrl, formatPrice } from '../utils';
+import { formatPrice } from '../utils';
 import { withRouter, RouterProps } from '../withRouter';
 import { StoreContext } from '../context';
 import { CheckoutFormData } from '../types';
