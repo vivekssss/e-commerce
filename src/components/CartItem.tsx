@@ -16,9 +16,9 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onIncrement,
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95, x: -20 }}
-      className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"
+      className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-2xl border border-gray-100 group"
     >
-      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-white border border-gray-100 flex-shrink-0">
         <img
           src={cleanImageUrl(item.images?.[0])}
           alt={item.title}
@@ -31,7 +31,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onIncrement,
       
       <div className="flex-grow flex flex-col justify-between min-w-0">
         <div>
-          <h3 className="text-base font-bold text-gray-900 truncate">{item.title}</h3>
+          <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate">{item.title}</h3>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{item.category?.name}</p>
         </div>
         <div className="flex items-center gap-4 mt-2">

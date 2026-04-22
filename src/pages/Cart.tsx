@@ -60,15 +60,45 @@ class Cart extends React.Component<RouterProps, CartState> {
 
   handleRemoveItem = (id: number, title: string) => {
     this.context.removeItem(id);
-    toast.error(`${title} removed from cart`);
+    toast.error(`${title} removed from cart`, {
+      icon: <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+      style: { borderRadius: '16px', fontWeight: 'bold' }
+    });
+  };
+
+  handleIncrement = (item: any) => {
+    this.context.addToCart(item);
+    toast.success(`Added another ${item.title}`, {
+      icon: <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>,
+      style: { borderRadius: '16px', fontWeight: 'bold' },
+      autoClose: 1000
+    });
+  };
+
+  handleDecrement = (item: any) => {
+    const isRemoving = item.quantity === 1;
+    this.context.removeFromCart(item.id);
+    
+    if (isRemoving) {
+      toast.error(`${item.title} removed from cart`, {
+        icon: <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+        style: { borderRadius: '16px', fontWeight: 'bold' }
+      });
+    } else {
+      toast.info(`Removed one ${item.title}`, {
+        icon: <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" /></svg>,
+        style: { borderRadius: '16px', fontWeight: 'bold' },
+        autoClose: 1000
+      });
+    }
   };
 
   renderCartItems = () => {
     const cart = this.context;
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-end mb-6">
-          <h2 className="text-2xl font-black text-gray-900">Your Shopping Cart</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg sm:text-2xl font-black text-gray-900 leading-tight">Your Shopping Cart</h2>
           {cart.items.length > 0 && (
             <button 
               onClick={() => {
@@ -91,8 +121,8 @@ class Cart extends React.Component<RouterProps, CartState> {
                 key={item.id} 
                 item={item} 
                 onRemove={this.handleRemoveItem} 
-                onIncrement={(item) => cart.addToCart(item)} 
-                onDecrement={(id) => cart.removeFromCart(id)} 
+                onIncrement={this.handleIncrement} 
+                onDecrement={() => this.handleDecrement(item)} 
               />
             ))}
           </AnimatePresence>
@@ -107,8 +137,8 @@ class Cart extends React.Component<RouterProps, CartState> {
             <span>GST (8%)</span>
             <span className="text-gray-900 font-bold">{formatPrice(cart.taxAmount)}</span>
           </div>
-          <div className="flex justify-between text-xl font-black text-gray-900 pt-4 border-t border-gray-100">
-            <span>Total Amount</span>
+          <div className="flex justify-between text-lg sm:text-xl font-black text-gray-900 pt-4 border-t border-gray-100">
+            <span>Total</span>
             <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               {formatPrice(cart.grandTotal)}
             </span>
@@ -118,7 +148,7 @@ class Cart extends React.Component<RouterProps, CartState> {
         <button
           data-testid="checkout-btn"
           onClick={() => this.setState({ step: 'shipping' })}
-          className="w-full mt-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-200 btn-hover flex items-center justify-center gap-3"
+          className="w-full mt-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold text-base sm:text-lg shadow-xl shadow-indigo-200 btn-hover flex items-center justify-center gap-3"
         >
           Checkout Now
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +175,7 @@ class Cart extends React.Component<RouterProps, CartState> {
           Back to Cart
         </button>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Shipping & Payment</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-6">Shipping & Payment</h2>
 
         <div className="space-y-4">
           <div>
@@ -248,9 +278,9 @@ class Cart extends React.Component<RouterProps, CartState> {
           <BackButton to="/" label="Back to Explore" />
         </div>
 
-        <div className="max-w-3xl mx-auto bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 md:p-10 relative z-10">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl sm:rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-4 sm:p-10 relative z-10">
           {step !== 'success' && (
-            <div className="flex items-center gap-4 mb-10 overflow-hidden">
+            <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-10 overflow-hidden">
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${
                   step === 'cart' ? 'bg-indigo-600 text-white' : 'bg-emerald-500 text-white'
@@ -303,12 +333,12 @@ class Cart extends React.Component<RouterProps, CartState> {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">Clear Cart?</h3>
-                <p className="text-gray-500 font-medium mb-8">Are you sure you want to remove all items from your cart? This action cannot be undone.</p>
-                <div className="flex gap-4">
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">Clear Cart?</h3>
+                <p className="text-sm sm:text-base text-gray-500 font-medium mb-8">Are you sure you want to remove all items from your cart? This action cannot be undone.</p>
+                <div className="flex gap-3 sm:gap-4">
                   <button
                     onClick={() => this.setState({ showClearConfirm: false })}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="flex-1 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-base text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     Cancel
                   </button>
@@ -318,7 +348,7 @@ class Cart extends React.Component<RouterProps, CartState> {
                       this.setState({ showClearConfirm: false });
                       toast.success('Cart cleared', { style: { borderRadius: '16px', fontWeight: 'bold' } });
                     }}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 transition-colors"
+                    className="flex-1 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-base text-white bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 transition-colors"
                   >
                     Yes, Clear All
                   </button>
