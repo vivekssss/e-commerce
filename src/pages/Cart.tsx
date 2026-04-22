@@ -11,6 +11,7 @@ interface CartState {
   form: CheckoutFormData;
   step: 'cart' | 'shipping' | 'success';
   processing: boolean;
+  showClearConfirm: boolean;
 }
 
 class Cart extends React.Component<RouterProps, CartState> {
@@ -30,6 +31,7 @@ class Cart extends React.Component<RouterProps, CartState> {
     },
     step: 'cart',
     processing: false,
+    showClearConfirm: false,
   };
 
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +68,7 @@ class Cart extends React.Component<RouterProps, CartState> {
           <h2 className="text-2xl font-black text-gray-900">Your Shopping Cart</h2>
           {cart.items.length > 0 && (
             <button 
-              onClick={() => cart.clearCart()}
+              onClick={() => this.setState({ showClearConfirm: true })}
               className="text-sm text-rose-500 font-bold hover:text-rose-600 transition-colors flex items-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -311,18 +313,23 @@ class Cart extends React.Component<RouterProps, CartState> {
     }
 
     return (
-      <div className="page-transition pb-20">
-        <button
-          onClick={() => this.props.navigate('/')}
-          className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-indigo-600 font-semibold transition-colors mb-6 group"
-        >
-          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Home
-        </button>
+      <div className="page-transition pb-20 relative">
+        <div className="sticky top-6 z-50 mb-8 pointer-events-none px-4 sm:px-0">
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            data-testid="back-button"
+            onClick={() => this.props.navigate('/')}
+            className="inline-flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-xl shadow-xl shadow-gray-200/50 rounded-2xl text-gray-800 hover:text-indigo-600 hover:shadow-indigo-100 font-black transition-all hover:-translate-y-0.5 group border border-gray-100 pointer-events-auto"
+          >
+            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Explore
+          </motion.button>
+        </div>
 
-        <div className="max-w-3xl mx-auto bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 md:p-10">
+        <div className="max-w-3xl mx-auto bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 md:p-10 relative z-10">
           {step !== 'success' && (
             <div className="flex items-center gap-4 mb-10 overflow-hidden">
               <div className="flex items-center gap-2">
@@ -355,6 +362,52 @@ class Cart extends React.Component<RouterProps, CartState> {
             {step === 'success' && this.renderSuccess()}
           </motion.div>
         </div>
+
+        <AnimatePresence>
+          {this.state.showClearConfirm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+                onClick={() => this.setState({ showClearConfirm: false })}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative bg-white rounded-[32px] shadow-2xl p-8 max-w-md w-full border border-gray-100 text-center"
+              >
+                <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">Clear Cart?</h3>
+                <p className="text-gray-500 font-medium mb-8">Are you sure you want to remove all items from your cart? This action cannot be undone.</p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => this.setState({ showClearConfirm: false })}
+                    className="flex-1 py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      this.context.clearCart();
+                      this.setState({ showClearConfirm: false });
+                      toast.success('Cart cleared', { style: { borderRadius: '16px', fontWeight: 'bold' } });
+                    }}
+                    className="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 transition-colors"
+                  >
+                    Yes, Clear All
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
