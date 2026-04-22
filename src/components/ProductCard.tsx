@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { observer } from 'mobx-react';
 import { Product } from '../types';
 import { cleanImageUrl, formatPrice } from '../utils';
 import { StoreContext } from '../context';
@@ -12,12 +13,12 @@ interface ProductCardProps {
   onRemoveOne: (product: Product, e: React.MouseEvent) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
+function ProductCardComponent({
   product,
   index,
   onAddToCart,
   onRemoveOne,
-}) => {
+}: ProductCardProps) {
   const store = useContext(StoreContext);
   const quantity = store.getItemQuantity(product.id);
   const imageUrl = cleanImageUrl(product.images?.[0]);
@@ -101,4 +102,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </Link>
     </motion.div>
   );
-};
+}
+
+export const ProductCard = observer(ProductCardComponent);

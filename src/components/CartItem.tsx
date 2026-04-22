@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { observer } from 'mobx-react';
 import { cleanImageUrl, formatPrice } from '../utils';
 
 interface CartItemProps {
@@ -9,7 +10,7 @@ interface CartItemProps {
   onDecrement: (id: number) => void;
 }
 
-export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onIncrement, onDecrement }) => {
+function CartItemComponent({ item, onRemove, onIncrement, onDecrement }: CartItemProps) {
   return (
     <motion.div
       layout
@@ -73,4 +74,6 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onIncrement,
       </div>
     </motion.div>
   );
-};
+}
+
+export const CartItem = observer(CartItemComponent);
