@@ -12,14 +12,13 @@ describe('ShopWave E-commerce', () => {
     
     cy.url().should('include', '/product/');
     cy.get('[data-testid="add-to-cart-btn"]').click();
-    cy.get('[data-testid="add-to-cart-btn"]').should('contain', 'Added');
+    cy.get('[data-testid="add-to-cart-btn"]').should('contain', 'Add Another');
+    
+    cy.get('[data-testid="cart-btn"]').click();
+    cy.url().should('include', '/cart');
     
     cy.get('[data-testid="checkout-btn"]').click();
-    
-    cy.url().should('include', '/checkout');
-    cy.get('h2').should('contain', 'Order Summary');
-    
-    cy.contains('Continue to Shipping').click();
+    cy.get('h2').should('contain', 'Shipping & Payment');
     
     cy.get('input[name="fullName"]').type('John Doe');
     cy.get('input[name="email"]').type('john@example.com');
@@ -30,7 +29,7 @@ describe('ShopWave E-commerce', () => {
     cy.get('input[name="expiry"]').type('12/25');
     cy.get('input[name="cvv"]').type('123');
     
-    cy.contains('Place Order').click();
+    cy.contains('Pay').click();
     
     cy.get('h2', { timeout: 10000 }).should('contain', 'Order Confirmed');
     cy.contains('Continue Shopping').click();

@@ -116,6 +116,7 @@ class Cart extends React.Component<RouterProps, CartState> {
         </div>
 
         <button
+          data-testid="checkout-btn"
           onClick={() => this.setState({ step: 'shipping' })}
           className="w-full mt-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-200 btn-hover flex items-center justify-center gap-3"
         >

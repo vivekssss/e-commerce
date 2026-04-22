@@ -9,6 +9,7 @@ import { StoreContext } from '../context';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/ProductSkeleton';
 import { CategoryFilter } from '../components/CategoryFilter';
+import { SortDropdown } from '../components/SortDropdown';
 
 interface FlyingProduct {
   product: Product;
@@ -169,9 +170,8 @@ class Home extends React.Component<RouterProps, HomeState> {
     }, 500);
   };
 
-  handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const sort = e.target.value;
-    this.updateURL(this.state.selectedCategory, this.state.searchQuery, sort);
+  handleSortChange = (value: string) => {
+    this.updateURL(this.state.selectedCategory, this.state.searchQuery, value);
   };
 
   getSortedProducts = () => {
@@ -239,7 +239,7 @@ class Home extends React.Component<RouterProps, HomeState> {
             >
               <div className="relative flex-grow group">
                 <span className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-gray-400 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </span>
@@ -250,23 +250,20 @@ class Home extends React.Component<RouterProps, HomeState> {
                   placeholder="What are you looking for today?"
                   value={searchQuery}
                   onChange={this.handleSearchChange}
-                  className="block w-full pl-11 pr-4 py-3.5 border-2 border-gray-100 rounded-2xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm font-medium transition-all duration-300 shadow-sm"
+                  className="block w-full h-[58px] pl-11 pr-4 border-2 border-gray-100 rounded-2xl leading-none bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm font-medium transition-all duration-300 shadow-sm"
                 />
               </div>
-              <select
-                id="sort-select"
-                data-testid="sort-select"
-                value={sortOrder}
+              <SortDropdown 
+                value={sortOrder} 
                 onChange={this.handleSortChange}
-                className="sm:w-48 pl-4 pr-10 py-3.5 text-sm border-2 border-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-2xl bg-white text-gray-700 font-bold transition-all duration-300 shadow-sm cursor-pointer appearance-none"
-                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236B7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
-              >
-                <option value="default">Quick Sort</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="title_asc">Name: A-Z</option>
-                <option value="title_desc">Name: Z-A</option>
-              </select>
+                options={[
+                  { value: 'default', label: 'Quick Sort', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg> },
+                  { value: 'price_asc', label: 'Price: Low to High', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg> },
+                  { value: 'price_desc', label: 'Price: High to Low', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m8 8l-4 4m0 0l-4-4m4 4V4" /></svg> },
+                  { value: 'title_asc', label: 'Name: A-Z', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0h4m-4 4h4m-4 4h4" /></svg> },
+                  { value: 'title_desc', label: 'Name: Z-A', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v12m0 0l-4-4m4 4l4-4m6 0h4m-4 4h4m-4 4h4" /></svg> },
+                ]}
+              />
             </motion.div>
           </div>
         </header>
