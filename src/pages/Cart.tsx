@@ -6,6 +6,9 @@ import { cleanImageUrl, formatPrice } from '../utils';
 import { withRouter, RouterProps } from '../withRouter';
 import { StoreContext } from '../context';
 import { CheckoutFormData } from '../types';
+import { CartItem } from '../components/CartItem';
+import { BackButton } from '../components/BackButton';
+import { OrderSuccess } from '../components/OrderSuccess';
 
 interface CartState {
   form: CheckoutFormData;
@@ -79,68 +82,13 @@ class Cart extends React.Component<RouterProps, CartState> {
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
             {cart.items.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95, x: -20 }}
-                className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"
-              >
-                <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-gray-100 flex-shrink-0">
-                  <img
-                    src={cleanImageUrl(item.images?.[0])}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=P&background=e2e8f0&color=64748b&size=64';
-                    }}
-                  />
-                </div>
-                
-                <div className="flex-grow flex flex-col justify-between min-w-0">
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900 truncate">{item.title}</h3>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{item.category?.name}</p>
-                  </div>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-xl border border-gray-100">
-                      <button 
-                        onClick={() => cart.removeFromCart(item.id)}
-                        className="text-indigo-600 hover:text-indigo-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
-                        </svg>
-                      </button>
-                      <span className="text-sm font-black text-gray-900 min-w-[20px] text-center">{item.quantity}</span>
-                      <button 
-                        onClick={() => cart.addToCart(item)}
-                        className="text-indigo-600 hover:text-indigo-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
-                        </svg>
-                      </button>
-                    </div>
-                    <button 
-                      onClick={() => this.handleRemoveItem(item.id, item.title)}
-                      className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end justify-between sm:text-right">
-                  <span className="text-lg font-black text-gray-900">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
-                  <span className="text-[10px] text-gray-400 font-medium">
-                    {formatPrice(item.price)} each
-                  </span>
-                </div>
-              </motion.div>
+              <CartItem 
+                key={item.id} 
+                item={item} 
+                onRemove={this.handleRemoveItem} 
+                onIncrement={(item) => cart.addToCart(item)} 
+                onDecrement={(id) => cart.removeFromCart(id)} 
+              />
             ))}
           </AnimatePresence>
         </div>
@@ -263,31 +211,7 @@ class Cart extends React.Component<RouterProps, CartState> {
     );
   };
 
-  renderSuccess = () => {
-    return (
-      <div className="page-transition flex flex-col items-center justify-center py-12 text-center">
-        <motion.div 
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', damping: 12 }}
-          className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-200"
-        >
-          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        </motion.div>
-        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Order Confirmed!</h2>
-        <p className="text-gray-500 mb-2 max-w-sm">Your order has been placed and will be shipped soon.</p>
-        <p className="text-xs text-gray-400 mb-8">Order #SW-{Math.floor(Math.random() * 900000 + 100000)}</p>
-        <button
-          onClick={() => this.props.navigate('/')}
-          className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 btn-hover"
-        >
-          Continue Shopping
-        </button>
-      </div>
-    );
-  };
+
 
   render() {
     const { step } = this.state;
@@ -315,18 +239,7 @@ class Cart extends React.Component<RouterProps, CartState> {
     return (
       <div className="page-transition pb-20 relative">
         <div className="sticky top-6 z-50 mb-8 pointer-events-none px-4 sm:px-0">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            data-testid="back-button"
-            onClick={() => this.props.navigate('/')}
-            className="inline-flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-xl shadow-xl shadow-gray-200/50 rounded-2xl text-gray-800 hover:text-indigo-600 hover:shadow-indigo-100 font-black transition-all hover:-translate-y-0.5 group border border-gray-100 pointer-events-auto"
-          >
-            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Explore
-          </motion.button>
+          <BackButton to="/" label="Back to Explore" />
         </div>
 
         <div className="max-w-3xl mx-auto bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 md:p-10 relative z-10">
@@ -359,7 +272,7 @@ class Cart extends React.Component<RouterProps, CartState> {
           >
             {step === 'cart' && this.renderCartItems()}
             {step === 'shipping' && this.renderShippingForm()}
-            {step === 'success' && this.renderSuccess()}
+            {step === 'success' && <OrderSuccess />}
           </motion.div>
         </div>
 

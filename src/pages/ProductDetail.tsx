@@ -6,8 +6,12 @@ import { Product } from '../types';
 import { cleanImageUrl, formatPrice } from '../utils';
 import { withRouter, RouterProps } from '../withRouter';
 import { StoreContext } from '../context';
+import { BackButton } from '../components/BackButton';
 
 interface DetailState {
+  product: Product | null;
+  loading: boolean;
+  error: string | null;
   selectedImage: number;
   windowWidth: number;
   isFlying: boolean;
@@ -18,6 +22,9 @@ class ProductDetail extends React.Component<RouterProps, DetailState> {
   context!: React.ContextType<typeof StoreContext>;
 
   state: DetailState = {
+    product: null,
+    loading: true,
+    error: null,
     selectedImage: 0,
     windowWidth: window.innerWidth,
     isFlying: false,
@@ -29,7 +36,23 @@ class ProductDetail extends React.Component<RouterProps, DetailState> {
 
   componentDidMount() {
     window.addEventListener('resize', this.handleResize);
+    this.fetchProduct();
   }
+
+  fetchProduct = async () => {
+    const { params } = this.props;
+    if (!params.id) return;
+    
+    this.setState({ loading: true, error: null });
+    try {
+      // @ts-ignore
+      const ky = (await import('ky')).default;
+      const response = await ky(`https://api.escuelajs.co/api/v1/products/${params.id}`).json();
+      this.setState({ product: response as Product, loading: false });
+    } catch (err) {
+      this.setState({ error: 'Failed to load product details', loading: false });
+    }
+  };
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
@@ -41,8 +64,8 @@ class ProductDetail extends React.Component<RouterProps, DetailState> {
     setTimeout(() => this.setState({ isFlying: false }), 800);
     
     toast.success(`${product.title} added to cart!`, {
-      icon: <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
-      style: { borderRadius: '16px', fontWeight: 'bold' }
+      icon: <svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 100-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>,
+      style: { borderRadius: '16px', fontWeight: 'bold', color: '#1e1b4b' }
     });
   };
 
@@ -55,12 +78,19 @@ class ProductDetail extends React.Component<RouterProps, DetailState> {
   };
 
   render() {
-    const product = (this.props.location.state as any)?.product as Product | undefined;
-    const { selectedImage, windowWidth, isFlying } = this.state;
+    const { product, loading, error, selectedImage, windowWidth, isFlying } = this.state;
     const isMobile = windowWidth < 768;
     const cart = this.context;
 
-    if (!product) {
+    if (loading) {
+      return (
+        <div className="page-transition flex flex-col items-center justify-center py-40">
+          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        </div>
+      );
+    }
+
+    if (error || !product) {
       return (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -85,18 +115,7 @@ class ProductDetail extends React.Component<RouterProps, DetailState> {
     return (
       <div className="page-transition relative">
         <div className="sticky top-6 z-50 mb-8 pointer-events-none">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            data-testid="back-button"
-            onClick={() => this.props.navigate('/')}
-            className="inline-flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-xl shadow-xl shadow-gray-200/50 rounded-2xl text-gray-800 hover:text-indigo-600 hover:shadow-indigo-100 font-black transition-all hover:-translate-y-0.5 group border border-gray-100 pointer-events-auto"
-          >
-            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Explore
-          </motion.button>
+          <BackButton to="/" label="Back to Explore" />
         </div>
 
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-8 bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 overflow-hidden border border-gray-100`}>

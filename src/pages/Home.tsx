@@ -7,6 +7,9 @@ import { Product, Category } from '../types';
 import { cleanImageUrl, formatPrice } from '../utils';
 import { withRouter, RouterProps } from '../withRouter';
 import { StoreContext } from '../context';
+import { ProductCard } from '../components/ProductCard';
+import { ProductSkeleton } from '../components/ProductSkeleton';
+import { CategoryFilter } from '../components/CategoryFilter';
 
 interface FlyingProduct {
   product: Product;
@@ -87,7 +90,7 @@ class Home extends React.Component<RouterProps, HomeState> {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
-      startPos = { x: e.clientX - 100, y: e.clientY + window.scrollY - 100 }; // offset to center card
+      startPos = { x: e.clientX - 100, y: e.clientY - 100 }; // Use viewport coordinates
     }
     
     this.context.addToCart(product);
@@ -95,8 +98,8 @@ class Home extends React.Component<RouterProps, HomeState> {
     setTimeout(() => this.setState({ flyingProduct: null }), 800);
     
     toast.success(`${product.title} added to cart!`, { 
-      icon: <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>, 
-      style: { borderRadius: '16px', fontWeight: 'bold' }
+      icon: <svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 100-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>, 
+      style: { borderRadius: '16px', fontWeight: 'bold', color: '#1e1b4b' }
     });
   };
 
@@ -112,9 +115,10 @@ class Home extends React.Component<RouterProps, HomeState> {
 
   fetchCategories = async () => {
     try {
-      const res = await fetch('https://api.escuelajs.co/api/v1/categories');
-      const data = await res.json();
-      this.setState({ categories: data.slice(0, 5) });
+      // @ts-ignore
+      const ky = (await import('ky')).default;
+      const data: any = await ky('https://api.escuelajs.co/api/v1/categories').json();
+      this.setState({ categories: data });
     } catch (err) {
       this.setState({ error: 'Failed to load categories' });
     }
@@ -124,13 +128,19 @@ class Home extends React.Component<RouterProps, HomeState> {
     const { selectedCategory, searchQuery } = this.state;
     this.setState({ loading: true, error: null });
     try {
-      let url = 'https://api.escuelajs.co/api/v1/products/?';
+      let url = 'https://api.escuelajs.co/api/v1/products/';
       const params = new URLSearchParams();
       if (selectedCategory) params.append('categoryId', selectedCategory.toString());
       if (searchQuery) params.append('title', searchQuery);
       
-      const res = await fetch(url + params.toString());
-      const data = await res.json();
+      const queryString = params.toString();
+      if (queryString) {
+        url += '?' + queryString;
+      }
+      
+      // @ts-ignore
+      const ky = (await import('ky')).default;
+      const data: any = await ky(url).json();
       this.setState({ products: data, loading: false });
     } catch (err) {
       this.setState({ error: 'Failed to load products', loading: false });
@@ -185,105 +195,17 @@ class Home extends React.Component<RouterProps, HomeState> {
     });
   };
 
-  renderSkeleton = () => {
-    return Array.from({ length: 8 }).map((_, i) => (
-      <div key={i} className="bg-white rounded-3xl overflow-hidden shadow-sm">
-        <div className="shimmer-bg h-64 w-full" />
-        <div className="p-6">
-          <div className="shimmer-bg h-4 w-3/4 rounded mb-3" />
-          <div className="shimmer-bg h-4 w-1/2 rounded mb-6" />
-          <div className="flex justify-between items-center">
-            <div className="shimmer-bg h-8 w-24 rounded-lg" />
-            <div className="shimmer-bg h-8 w-8 rounded-full" />
-          </div>
-        </div>
-      </div>
-    ));
-  };
+
 
   renderProductCard = (product: Product, index: number) => {
-    const imageUrl = cleanImageUrl(product.images?.[0]);
-    const quantity = this.context.getItemQuantity(product.id);
-
     return (
-      <motion.div
+      <ProductCard 
         key={product.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: (index % 8) * 0.05 }}
-        whileHover={{ y: -10, transition: { duration: 0.2 } }}
-      >
-        <Link
-          to={`/product/${product.id}/details`}
-          state={{ product }}
-          data-testid={`product-card-${product.id}`}
-          className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-gray-100 block group relative"
-        >
-          <div className="relative overflow-hidden aspect-square">
-            <motion.img
-              layoutId={`product-image-${product.id}`}
-              src={imageUrl}
-              alt={product.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=No+Image&background=e2e8f0&color=64748b&size=400';
-              }}
-            />
-            <div className="absolute top-4 right-4">
-              <span className="bg-white/90 backdrop-blur-md text-[10px] font-black text-indigo-600 px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest border border-indigo-50">
-                {product.category?.name}
-              </span>
-            </div>
-          </div>
-          <div className="p-6">
-            <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 leading-tight h-12">
-              {product.title}
-            </h3>
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex flex-col">
-                <span className="text-xl font-black text-gray-900">
-                  {formatPrice(product.price)}
-                </span>
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Best Price</span>
-              </div>
-              {quantity > 0 ? (
-                <div 
-                  className="flex items-center gap-3 bg-indigo-600 px-3 py-1.5 rounded-[20px] shadow-sm"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                >
-                  <button 
-                    onClick={(e) => this.handleRemoveOne(product, e)}
-                    className="text-white hover:text-indigo-200 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <span className="text-sm font-black text-white">{quantity}</span>
-                  <button 
-                    onClick={(e) => this.handleAddToCart(product, e)}
-                    className="text-white hover:text-indigo-200 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={(e) => this.handleAddToCart(product, e)}
-                  className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all duration-300 transform hover:rotate-12 shadow-sm"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        </Link>
-      </motion.div>
+        product={product} 
+        index={index} 
+        onAddToCart={this.handleAddToCart}
+        onRemoveOne={this.handleRemoveOne}
+      />
     );
   };
 
@@ -350,44 +272,11 @@ class Home extends React.Component<RouterProps, HomeState> {
           </div>
         </header>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-12"
-        >
-          <div className="flex items-center justify-between mb-6 px-1">
-            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Categories</h2>
-            <div className="h-[2px] flex-grow mx-6 bg-gray-100 rounded-full opacity-50" />
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide -mx-2 px-2">
-            <button
-              data-testid="filter-all"
-              onClick={() => this.handleCategoryClick(null)}
-              className={`px-8 py-3.5 rounded-2xl text-sm font-black whitespace-nowrap transition-all duration-500 ${
-                selectedCategory === null
-                  ? 'bg-gray-900 text-white shadow-2xl shadow-gray-300 scale-105'
-                  : 'bg-white text-gray-500 border-2 border-gray-100 hover:border-indigo-200 hover:text-indigo-600'
-              }`}
-            >
-              All Arrivals
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                data-testid={`filter-${cat.id}`}
-                onClick={() => this.handleCategoryClick(cat.id)}
-                className={`px-8 py-3.5 rounded-2xl text-sm font-black whitespace-nowrap transition-all duration-500 ${
-                  selectedCategory === cat.id
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-2xl shadow-indigo-200 scale-105'
-                    : 'bg-white text-gray-500 border-2 border-gray-100 hover:border-indigo-200 hover:text-indigo-600'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        <CategoryFilter 
+          categories={categories} 
+          selectedCategory={selectedCategory} 
+          onCategoryClick={this.handleCategoryClick} 
+        />
 
         {error && (
           <motion.div 
@@ -407,7 +296,7 @@ class Home extends React.Component<RouterProps, HomeState> {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-          {loading ? this.renderSkeleton() : sortedProducts.map((p, i) => this.renderProductCard(p, i))}
+          {loading ? <ProductSkeleton /> : sortedProducts.map((p, i) => this.renderProductCard(p, i))}
         </div>
 
         {!loading && sortedProducts.length === 0 && !error && (
@@ -439,12 +328,12 @@ class Home extends React.Component<RouterProps, HomeState> {
               }}
               animate={{ 
                 x: window.innerWidth / 2 - 50, 
-                y: window.scrollY + window.innerHeight - 100, 
+                y: window.innerHeight - 100, 
                 scale: 0.1, 
                 opacity: 0 
               }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
-              className="absolute z-[100] w-64 bg-white rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 pointer-events-none"
+              className="fixed z-[100] w-64 bg-white rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 pointer-events-none"
               style={{ left: 0, top: 0 }}
             >
               <img 
