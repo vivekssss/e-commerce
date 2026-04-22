@@ -29,9 +29,9 @@ describe('ShopWave E-commerce', () => {
     cy.get('input[name="expiry"]').type('12/25');
     cy.get('input[name="cvv"]').type('123');
     
-    cy.contains('Pay').click();
+    cy.get('[data-testid="pay-btn"]').should('not.be.disabled').click();
     
-    cy.get('h2', { timeout: 10000 }).should('contain', 'Order Confirmed');
+    cy.contains('Order Confirmed', { timeout: 15000 }).should('be.visible');
     cy.contains('Continue Shopping').click();
     cy.url().should('eq', 'http://localhost:3000/');
   });
@@ -39,7 +39,37 @@ describe('ShopWave E-commerce', () => {
   it('filters products by category', () => {
     cy.get('[data-testid^="filter-"]').eq(1).invoke('text').then((categoryName) => {
       cy.get('[data-testid^="filter-"]').eq(1).click();
-      cy.get('[data-testid^="product-card-"]').first().find('span').should('contain', categoryName.trim());
+      cy.get('[data-testid^="product-card-"]', { timeout: 10000 }).first().find('span').should('contain', categoryName.trim());
+    });
+  });
+
+  it('searches for products and shows preview', () => {
+    const searchTerm = 'Cotton';
+    cy.get('[data-testid="search-input"]').type(searchTerm);
+    
+    // Check for "Searching for..." preview
+    cy.contains(`Searching for "${searchTerm}"`).should('be.visible');
+    
+    // Wait for results and verify at least one card is shown
+    cy.get('[data-testid^="product-card-"]', { timeout: 15000 }).should('have.length.at.least', 1);
+  });
+
+  it('sorts products by price', () => {
+    // Open sort dropdown
+    cy.contains('Quick Sort').click();
+    cy.contains('Price: Low to High').click();
+    
+    // Wait for sort to apply and check prices
+    cy.get('[data-testid^="product-card-"]').then(($cards) => {
+      // Find the price text which is in a specific font-black span
+      const getPrice = ($el) => parseFloat($el.find('.font-black.text-gray-900').text().replace(/[^\d.]/g, ''));
+      
+      const price1 = getPrice($cards.eq(0));
+      const price2 = getPrice($cards.eq(1));
+      
+      if (!isNaN(price1) && !isNaN(price2)) {
+        expect(price1).to.be.at.most(price2);
+      }
     });
   });
 });

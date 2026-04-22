@@ -223,6 +223,7 @@ class Cart extends React.Component<RouterProps, CartState> {
         </div>
 
         <button
+          data-testid="pay-btn"
           onClick={this.handlePlaceOrder}
           disabled={!this.isFormValid() || processing}
           className={`w-full mt-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${
